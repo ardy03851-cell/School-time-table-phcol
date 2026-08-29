@@ -8,7 +8,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <link
     href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Patrick+Hand&family=Inter:wght@600;700;800&display=swap"
-    rel="stylesheet">
+    rel="stylesheet" crossorigin="anonymous">
   <style>
     * {
       box-sizing: border-box;
@@ -230,6 +230,21 @@
 
     .bg-cspe {
       background-color: #e7f5ff;
+    }
+
+    @media print {
+      body {
+        background: none;
+        padding: 0;
+      }
+
+      .action-bar {
+        display: none !important;
+      }
+
+      .timetable-card {
+        box-shadow: none;
+      }
     }
   </style>
 </head>
@@ -537,14 +552,29 @@
   <script>
     function downloadTimetable() {
       const timetableElement = document.getElementById('timetable');
+      const btn = document.querySelector('.btn-download');
+      btn.innerText = '⏳ Generating...';
+
       html2canvas(timetableElement, {
         scale: 2,
-        useCORS: true
+        useCORS: true,
+        allowTaint: true,
+        logging: false
       }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = 'Oleksandr_Lahoza_Timetable_Drawn.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
+        try {
+          const link = document.createElement('a');
+          link.download = 'Oleksandr_Lahoza_Timetable.png';
+          link.href = canvas.toDataURL('image/png');
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } catch (err) {
+          window.print();
+        }
+        btn.innerText = '✏️ Download Timetable Image';
+      }).catch(err => {
+        window.print();
+        btn.innerText = '✏️ Download Timetable Image';
       });
     }
   </script>
