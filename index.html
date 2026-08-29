@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>School Timetable - Lahoza, OLEKSANDR</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Patrick+Hand&family=Inter:wght@600;700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #f4edd9;
+      background-image: radial-gradient(#d3c7a1 0.8px, transparent 0.8px);
+      background-size: 18px 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px;
+      font-family: 'Patrick Hand', cursive, sans-serif;
+      color: #1a1a1a;
+    }
+
+    .action-bar {
+      margin-bottom: 20px;
+    }
+
+    .btn-download {
+      font-family: 'Patrick Hand', cursive, sans-serif;
+      font-size: 19px;
+      font-weight: bold;
+      background-color: #ffd43b;
+      color: #111;
+      border: 2.5px solid #111;
+      padding: 10px 24px;
+      border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+      cursor: pointer;
+      box-shadow: 4px 4px 0px #111;
+      transition: all 0.15s ease-in-out;
+    }
+
+    .btn-download:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0px #111;
+      background-color: #fcc419;
+    }
+
+    /* Sketch / Hand-drawn Card Container */
+    .timetable-card {
+      width: 960px;
+      background: #fffdfa;
+      padding: 24px;
+      border: 3px solid #222;
+      border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+      box-shadow: 6px 7px 0px #222;
+    }
+
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 3px dashed #222;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+
+    .header-title {
+      font-family: 'Architects Daughter', cursive;
+      font-size: 24px;
+      font-weight: 700;
+      color: #111;
+      letter-spacing: 0.5px;
+    }
+
+    .header-badge {
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      background-color: #e9ecef;
+      color: #212529;
+      padding: 4px 12px;
+      border: 2px solid #222;
+      border-radius: 20px;
+      box-shadow: 2px 2px 0px #222;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 6px;
+      table-layout: fixed;
+    }
+
+    th {
+      font-family: 'Architects Daughter', cursive;
+      font-size: 17px;
+      font-weight: 700;
+      color: #111;
+      background-color: #f1f3f5;
+      border: 2.5px solid #222;
+      border-radius: 14px 6px 12px 5px/6px 14px 5px 12px;
+      padding: 8px;
+      text-align: center;
+      box-shadow: 2px 2px 0px #222;
+    }
+
+    td {
+      border: 2px solid #222;
+      border-radius: 12px 6px 14px 6px/6px 12px 6px 14px;
+      padding: 8px;
+      vertical-align: top;
+      font-size: 14px;
+      line-height: 1.2;
+      box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.15);
+    }
+
+    .time-col {
+      width: 95px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 12px;
+      text-align: center;
+      background-color: #f8f9fa;
+      vertical-align: middle;
+      color: #343a40;
+    }
+
+    .subject-title {
+      font-family: 'Architects Daughter', cursive;
+      font-size: 15px;
+      font-weight: 700;
+      color: #000;
+      margin-bottom: 4px;
+      line-height: 1.1;
+    }
+
+    /* Bold, clear room / class badge */
+    .room-badge {
+      display: inline-block;
+      background-color: #ffffff;
+      color: #000000;
+      font-family: 'Inter', sans-serif;
+      font-weight: 800;
+      font-size: 11px;
+      padding: 2px 6px;
+      border: 1.5px solid #000;
+      border-radius: 5px;
+      margin-bottom: 4px;
+      box-shadow: 1px 1px 0px #000;
+      letter-spacing: 0.3px;
+    }
+
+    .teacher-name {
+      font-size: 13px;
+      color: #333;
+      margin-bottom: 2px;
+    }
+
+    .class-code {
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      color: #555;
+    }
+
+    .break-row td {
+      background-color: #e9ecef;
+      background-image: repeating-linear-gradient(-45deg, #dee2e6 0, #dee2e6 4px, transparent 0, transparent 8px);
+      height: 14px;
+      padding: 2px;
+      border: 1.5px dashed #666;
+      box-shadow: none;
+    }
+
+    /* Hand-Drawn Sketchy Palette */
+    .bg-tutorial {
+      background-color: #ffdeeb;
+    }
+
+    .bg-wood {
+      background-color: #fff9db;
+    }
+
+    .bg-support {
+      background-color: #f3d9fa;
+    }
+
+    .bg-spanish {
+      background-color: #ffe8cc;
+    }
+
+    .bg-history {
+      background-color: #ffe3e3;
+    }
+
+    .bg-science {
+      background-color: #d3f9d8;
+    }
+
+    .bg-pe {
+      background-color: #d8f5a2;
+    }
+
+    .bg-math {
+      background-color: #d0ebff;
+    }
+
+    .bg-english {
+      background-color: #ffec99;
+    }
+
+    .bg-geo {
+      background-color: #ffd8a8;
+    }
+
+    .bg-engr {
+      background-color: #e7f5ff;
+    }
+
+    .bg-sphe {
+      background-color: #dbe4ff;
+    }
+
+    .bg-cspe {
+      background-color: #e7f5ff;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="action-bar">
+    <button class="btn-download" onclick="downloadTimetable()">✏️ Download Timetable Image</button>
+  </div>
+
+  <div id="timetable" class="timetable-card">
+    <div class="header-container">
+      <div class="header-title">Lahoza, OLEKSANDR</div>
+      <div class="header-badge">Class: 3 Galtymore</div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 95px;">Time</th>
+          <th>Monday</th>
+          <th>Tuesday</th>
+          <th>Wednesday</th>
+          <th>Thursday</th>
+          <th>Friday</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="break-row">
+          <td class="time-col">08:30 - 08:45</td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+
+        <tr>
+          <td class="time-col">08:46 - 08:50</td>
+          <td class="bg-tutorial">
+            <div class="subject-title">Tutorial</div>
+            <div class="room-badge">ROOM: B11</div>
+            <div class="teacher-name">Heather Gaffney</div>
+            <div class="class-code">3Tut-E</div>
+          </td>
+          <td class="bg-tutorial">
+            <div class="subject-title">Tutorial</div>
+            <div class="room-badge">ROOM: B11</div>
+            <div class="teacher-name">Heather Gaffney</div>
+            <div class="class-code">3Tut-E</div>
+          </td>
+          <td class="bg-tutorial">
+            <div class="subject-title">Tutorial</div>
+            <div class="room-badge">ROOM: B11</div>
+            <div class="teacher-name">Heather Gaffney</div>
+            <div class="class-code">3Tut-E</div>
+          </td>
+          <td class="bg-tutorial">
+            <div class="subject-title">Tutorial</div>
+            <div class="room-badge">ROOM: B11</div>
+            <div class="teacher-name">Heather Gaffney</div>
+            <div class="class-code">3Tut-E</div>
+          </td>
+          <td class="bg-tutorial">
+            <div class="subject-title">Tutorial</div>
+            <div class="room-badge">ROOM: B11</div>
+            <div class="teacher-name">Heather Gaffney</div>
+            <div class="class-code">3Tut-E</div>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="time-col">08:50 - 09:50</td>
+          <td class="bg-wood">
+            <div class="subject-title">Wood Tech</div>
+            <div class="room-badge">ROOM: A010B</div>
+            <div class="teacher-name">Eoin Harte</div>
+            <div class="class-code">3Woo-12.4</div>
+          </td>
+          <td class="bg-support">
+            <div class="subject-title">Subject Support</div>
+            <div class="room-badge">ROOM: B02</div>
+            <div class="teacher-name">Helen Dunleavy</div>
+            <div class="class-code">3Sup-7.4</div>
+          </td>
+          <td class="bg-english">
+            <div class="subject-title">English</div>
+            <div class="room-badge">ROOM: B18</div>
+            <div class="teacher-name">Roseanna Nolan</div>
+            <div class="class-code">3Eng-E</div>
+          </td>
+          <td class="bg-science">
+            <div class="subject-title">Science</div>
+            <div class="room-badge">ROOM: B20</div>
+            <div class="teacher-name">Heather Gaffney</div>
+            <div class="class-code">3Sci-E</div>
+          </td>
+          <td class="bg-wood">
+            <div class="subject-title">Wood Tech</div>
+            <div class="room-badge">ROOM: A010B</div>
+            <div class="teacher-name">Eoin Harte</div>
+            <div class="class-code">3Woo-12.4</div>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="time-col">09:50 - 10:50</td>
+          <td class="bg-support">
+            <div class="subject-title">Subject Support</div>
+            <div class="room-badge">ROOM: B02</div>
+            <div class="teacher-name">Laura Byrne</div>
+            <div class="class-code">3Sup-7.4</div>
+          </td>
+          <td class="bg-spanish">
+            <div class="subject-title">Spanish</div>
+            <div class="room-badge">ROOM: B12</div>
+            <div class="teacher-name">Niamh Condron</div>
+            <div class="class-code">3Spa-10.4</div>
+          </td>
+          <td class="bg-history">
+            <div class="subject-title">History</div>
+            <div class="room-badge">ROOM: C02</div>
+            <div class="teacher-name">M. Byrnes, J. O'Brien</div>
+            <div class="class-code">3His-E</div>
+          </td>
+          <td class="bg-engr">
+            <div class="subject-title">Engineering</div>
+            <div class="room-badge">ROOM: A09</div>
+            <div class="teacher-name">Adrian Harrison</div>
+            <div class="class-code">3Engr-11.4</div>
+          </td>
+          <td class="bg-science">
+            <div class="subject-title">Science</div>
+            <div class="room-badge">ROOM: B20</div>
+            <div class="teacher-name">Heather Gaffney</div>
+            <div class="class-code">3Sci-E</div>
+          </td>
+        </tr>
+
+        <tr class="break-row">
+          <td class="time-col">10:50 - 11:05</td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+
+        <tr>
+          <td class="time-col">11:05 - 12:05</td>
+          <td class="bg-history">
+            <div class="subject-title">History</div>
+            <div class="room-badge">ROOM: C02</div>
+            <div class="teacher-name">Michael Byrnes</div>
+            <div class="class-code">3His-E</div>
+          </td>
+          <td class="bg-pe">
+            <div class="subject-title">P.E.</div>
+            <div class="room-badge">ROOM: GymD</div>
+            <div class="teacher-name">Eva Cullinan</div>
+            <div class="class-code">3Pe-E</div>
+          </td>
+          <td class="bg-support">
+            <div class="subject-title">Subject Support</div>
+            <div class="room-badge">ROOM: B08</div>
+            <div class="teacher-name">Helen Dunleavy</div>
+            <div class="class-code">3Sup-7.4</div>
+          </td>
+          <td class="bg-wood">
+            <div class="subject-title">Wood Tech</div>
+            <div class="room-badge">ROOM: A010B</div>
+            <div class="teacher-name">Eoin Harte</div>
+            <div class="class-code">3Woo-12.4</div>
+          </td>
+          <td class="bg-english">
+            <div class="subject-title">English</div>
+            <div class="room-badge">ROOM: B18</div>
+            <div class="teacher-name">Roseanna Nolan</div>
+            <div class="class-code">3Eng-E</div>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="time-col">12:05 - 13:05</td>
+          <td class="bg-math">
+            <div class="subject-title">Mathematics</div>
+            <div class="room-badge">ROOM: A06</div>
+            <div class="teacher-name">C. Brennan, E. Jones</div>
+            <div class="class-code">3Mat-6.3</div>
+          </td>
+          <td class="bg-math">
+            <div class="subject-title">Mathematics</div>
+            <div class="room-badge">ROOM: A06</div>
+            <div class="teacher-name">C. Brennan, E. Jones</div>
+            <div class="class-code">3Mat-6.3</div>
+          </td>
+          <td class="bg-geo">
+            <div class="subject-title">Geography</div>
+            <div class="room-badge">ROOM: B18</div>
+            <div class="teacher-name">S. Egan, M. Holmes</div>
+            <div class="class-code">3Geo-E</div>
+          </td>
+          <td class="bg-english">
+            <div class="subject-title">English</div>
+            <div class="room-badge">ROOM: B18</div>
+            <div class="teacher-name">Roseanna Nolan</div>
+            <div class="class-code">3Eng-E</div>
+          </td>
+          <td class="bg-engr">
+            <div class="subject-title">Engineering</div>
+            <div class="room-badge">ROOM: A09</div>
+            <div class="teacher-name">A. O'Connor, A. Harrison</div>
+            <div class="class-code">3Engr-11.4</div>
+          </td>
+        </tr>
+
+        <tr class="break-row">
+          <td class="time-col">13:10 - 13:25</td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+
+        <tr class="break-row">
+          <td class="time-col">13:25 - 13:40</td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+
+        <tr>
+          <td class="time-col">13:40 - 14:40</td>
+          <td class="bg-spanish">
+            <div class="subject-title">Spanish</div>
+            <div class="room-badge">ROOM: B18</div>
+            <div class="teacher-name">D. Cronin, N. Condron</div>
+            <div class="class-code">3Spa-10.4</div>
+          </td>
+          <td class="bg-science">
+            <div class="subject-title">Science</div>
+            <div class="room-badge">ROOM: B20</div>
+            <div class="teacher-name">H. Gaffney, M. McNerney</div>
+            <div class="class-code">3Sci-E</div>
+          </td>
+          <td class="bg-sphe">
+            <div class="subject-title">SPHE</div>
+            <div class="room-badge">ROOM: B02</div>
+            <div class="teacher-name">Aoife Stafford</div>
+            <div class="class-code">3Sphe-E</div>
+          </td>
+          <td class="bg-math">
+            <div class="subject-title">Mathematics</div>
+            <div class="room-badge">ROOM: A06</div>
+            <div class="teacher-name">C. Brennan, E. Jones</div>
+            <div class="class-code">3Mat-6.3</div>
+          </td>
+          <td></td>
+        </tr>
+
+        <tr>
+          <td class="time-col">14:40 - 15:40</td>
+          <td class="bg-engr">
+            <div class="subject-title">Engineering</div>
+            <div class="room-badge">ROOM: A09</div>
+            <div class="teacher-name">A. O'Connor, A. Harrison</div>
+            <div class="class-code">3Engr-11.4</div>
+          </td>
+          <td class="bg-geo">
+            <div class="subject-title">Geography</div>
+            <div class="room-badge">ROOM: B18</div>
+            <div class="teacher-name">S. Egan, M. Holmes</div>
+            <div class="class-code">3Geo-E</div>
+          </td>
+          <td class="bg-pe">
+            <div class="subject-title">P.E.</div>
+            <div class="room-badge">ROOM: GymD</div>
+            <div class="teacher-name">Eva Cullinan</div>
+            <div class="class-code">3Pe-E</div>
+          </td>
+          <td class="bg-cspe">
+            <div class="subject-title">CSPE</div>
+            <div class="room-badge">ROOM: B11</div>
+            <div class="teacher-name">Maria Keeley</div>
+            <div class="class-code">3Cspe-E</div>
+          </td>
+          <td></td>
+        </tr>
+
+        <tr class="break-row">
+          <td class="time-col">15:40 - 15:45</td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    function downloadTimetable() {
+      const timetableElement = document.getElementById('timetable');
+      html2canvas(timetableElement, {
+        scale: 2,
+        useCORS: true
+      }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'Oleksandr_Lahoza_Timetable_Drawn.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+  </script>
+
+</body>
+
+</html>
