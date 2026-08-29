@@ -3,292 +3,784 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Lahoza, OLEKSANDR (3 Galtymore) - Timetable</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>3 Galtymore — Timetable</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
-    body {
-      font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
-      background: #dde3ea;
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    :root {
+      --ink: #16202c;
+      --ink-soft: #5b6b7c;
+      --paper: #f6f4ef;
+      --card: #ffffff;
+      --line: #e4e1d8;
+      --accent: #b5482e;
+      --accent-soft: #f2dfd6;
+      --now-ring: #1f7a5c;
+      --now-bg: #e7f4ee;
+      --pink: #b5305a;
+      --pink-bg: #fbebf1;
+      --yellow: #b5811f;
+      --yellow-bg: #faf1dc;
+      --blue: #2c5f8a;
+      --blue-bg: #e7f0f7;
+      --purple: #6a4b8f;
+      --purple-bg: #f0e9f7;
     }
 
-    #capture {
-      background: #fff;
-      width: 190mm;
-      padding: 14px 16px;
+    * {
       box-sizing: border-box;
-      border-radius: 10px;
-      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Iowan Old Style', 'Georgia', serif;
+      background: var(--paper);
+      color: var(--ink);
+      min-height: 100vh;
+      padding-bottom: 40px;
+    }
+
+    .utility {
+      font-family: 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
+    }
+
+    header {
+      padding: 22px 20px 16px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .eyebrow {
+      font-family: 'Avenir Next', system-ui, sans-serif;
+      font-size: 11px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 6px;
     }
 
     h1 {
-      font-size: 16px;
-      margin: 0 0 2px 0;
-      color: #1f2d3d;
-      letter-spacing: 0.3px;
-    }
-
-    .subtitle {
-      font-size: 9px;
-      color: #7a869a;
-      margin: 0 0 10px 0;
+      font-size: 26px;
+      margin: 0 0 2px;
       font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.2px;
     }
 
-    table {
-      border-collapse: separate;
-      border-spacing: 2px;
-      width: 100%;
-      table-layout: fixed;
+    .student-meta {
+      font-family: 'Avenir Next', system-ui, sans-serif;
+      font-size: 13px;
+      color: var(--ink-soft);
     }
 
-    th,
-    td {
-      border: 1px solid #e3e7ee;
-      vertical-align: top;
-      padding: 4px 5px;
-      font-size: 7.3px;
-      line-height: 1.25;
-      border-radius: 4px;
+    .now-card {
+      max-width: 720px;
+      margin: 14px auto 0;
+      padding: 0 20px;
     }
 
-    th {
-      background: #1f2d3d;
+    .now-inner {
+      background: var(--ink);
       color: #fff;
+      border-radius: 18px;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      font-family: 'Avenir Next', system-ui, sans-serif;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .now-inner::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 85% -20%, rgba(181, 72, 46, 0.55), transparent 60%);
+      pointer-events: none;
+    }
+
+    .now-label {
+      font-size: 10.5px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      opacity: 0.65;
+      margin-bottom: 4px;
+    }
+
+    .now-subject {
+      font-family: 'Iowan Old Style', Georgia, serif;
+      font-size: 20px;
+      font-weight: 600;
+      line-height: 1.15;
+    }
+
+    .now-detail {
+      font-size: 12.5px;
+      opacity: 0.8;
+      margin-top: 3px;
+    }
+
+    .now-timer {
+      text-align: right;
+      flex-shrink: 0;
+      z-index: 1;
+    }
+
+    .now-timer .t-num {
+      font-size: 24px;
       font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+
+    .now-timer .t-label {
+      font-size: 9.5px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      opacity: 0.6;
+      margin-top: 3px;
+    }
+
+    .now-progress {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      height: 3px;
+      background: var(--accent);
+      width: 0%;
+      transition: width 1s linear;
+    }
+
+    .day-tabs {
+      max-width: 720px;
+      margin: 18px auto 0;
+      padding: 0 20px;
+      display: flex;
+      gap: 6px;
+      font-family: 'Avenir Next', system-ui, sans-serif;
+    }
+
+    .day-tab {
+      flex: 1;
       text-align: center;
-      font-size: 8.5px;
-      padding: 6px 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-    }
-
-    .time-col {
-      width: 10%;
-      font-weight: 700;
-      text-align: left;
-      white-space: nowrap;
-      color: #445;
-      font-size: 6.8px;
-      background: #f4f6f9;
-      border: none;
-    }
-
-    .subj {
-      font-weight: 700;
-      display: block;
-      font-size: 7.6px;
-      margin-bottom: 1px;
-    }
-
-    .break-row td {
+      padding: 9px 4px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-soft);
       background: transparent;
-      border: none;
-      height: 4px;
-      font-size: 6px;
-      color: #9aa5b1;
-      font-style: italic;
-      padding: 1px 4px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      -webkit-user-select: none;
+      user-select: none;
     }
 
-    td.cell {
-      border-left: 4px solid #999;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
-    }
-
-    .c-pink {
-      border-left-color: #c9445f;
-      background: #fdf0f3;
-    }
-
-    .c-yellow {
-      border-left-color: #d9a441;
-      background: #fdf6e6;
-    }
-
-    .c-blue {
-      border-left-color: #3a6ea5;
-      background: #eaf2fa;
-    }
-
-    .c-purple {
-      border-left-color: #7b5aa6;
-      background: #f3eef9;
-    }
-
-    .empty {
-      background: #fbfbfc;
-      border-style: dashed;
-    }
-
-    #downloadBtn {
-      margin-top: 16px;
-      padding: 10px 20px;
-      font-size: 14px;
-      background: #2c6fbb;
+    .day-tab.active {
+      background: var(--ink);
       color: #fff;
+      border-color: var(--ink);
+    }
+
+    .day-tab.is-today:not(.active) {
+      color: var(--accent);
+      border-color: var(--accent-soft);
+    }
+
+    .day-tab .dtn {
+      display: block;
+      font-size: 9.5px;
+      opacity: 0.65;
+      margin-top: 1px;
+    }
+
+    .search-row {
+      max-width: 720px;
+      margin: 12px auto 0;
+      padding: 0 20px;
+      font-family: 'Avenir Next', system-ui, sans-serif;
+    }
+
+    .search-row input {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      font-size: 13.5px;
+      font-family: inherit;
+      color: var(--ink);
+    }
+
+    .search-row input:focus {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+
+    .schedule {
+      max-width: 720px;
+      margin: 16px auto 0;
+      padding: 0 20px;
+    }
+
+    .slot {
+      display: flex;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .slot:active {
+      opacity: 0.6;
+    }
+
+    .slot:last-child {
+      border-bottom: none;
+    }
+
+    .slot.dimmed {
+      opacity: 0.38;
+    }
+
+    .slot-time {
+      width: 64px;
+      flex-shrink: 0;
+      font-family: 'Avenir Next', system-ui, sans-serif;
+      font-size: 11.5px;
+      color: var(--ink-soft);
+      font-weight: 600;
+      padding-top: 2px;
+      line-height: 1.3;
+    }
+
+    .slot-bar {
+      width: 4px;
+      border-radius: 3px;
+      flex-shrink: 0;
+      align-self: stretch;
+    }
+
+    .slot-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .slot-subject {
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1.25;
+    }
+
+    .slot-meta {
+      font-family: 'Avenir Next', system-ui, sans-serif;
+      font-size: 12px;
+      color: var(--ink-soft);
+      margin-top: 2px;
+    }
+
+    .slot.now-slot {
+      background: var(--now-bg);
+      margin: 0 -14px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border-bottom: none;
+    }
+
+    .slot.now-slot+.slot {
+      border-top: none;
+    }
+
+    .now-pill {
+      display: inline-block;
+      font-family: 'Avenir Next', system-ui, sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--now-ring);
+      background: #fff;
+      border-radius: 20px;
+      padding: 2px 8px;
+      margin-bottom: 3px;
+    }
+
+    .break-slot {
+      padding: 6px 0;
+      font-family: 'Avenir Next', system-ui, sans-serif;
+      font-size: 11px;
+      color: var(--ink-soft);
+      font-style: italic;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      gap: 12px;
+    }
+
+    .break-slot .slot-time {
+      font-style: normal;
+    }
+
+    .empty-day {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--ink-soft);
+      font-family: 'Avenir Next', system-ui, sans-serif;
+      font-size: 14px;
+    }
+
+    .cat-pink .slot-bar {
+      background: var(--pink);
+    }
+
+    .cat-yellow .slot-bar {
+      background: var(--yellow);
+    }
+
+    .cat-blue .slot-bar {
+      background: var(--blue);
+    }
+
+    .cat-purple .slot-bar {
+      background: var(--purple);
+    }
+
+    .sheet-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(22, 32, 44, 0.45);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 40;
+    }
+
+    .sheet-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .sheet {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--card);
+      border-radius: 20px 20px 0 0;
+      padding: 22px 24px calc(28px + env(safe-area-inset-bottom));
+      max-width: 720px;
+      margin: 0 auto;
+      transform: translateY(100%);
+      transition: transform 0.25s cubic-bezier(.2, .9, .3, 1);
+      z-index: 41;
+      box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .sheet.open {
+      transform: translateY(0);
+    }
+
+    .sheet-handle {
+      width: 36px;
+      height: 4px;
+      background: var(--line);
+      border-radius: 3px;
+      margin: 0 auto 18px;
+    }
+
+    .sheet-eyebrow {
+      font-family: 'Avenir Next', system-ui, sans-serif;
+      font-size: 10.5px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      margin-bottom: 6px;
+    }
+
+    .sheet-subject {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+
+    .sheet-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-top: 1px solid var(--line);
+      font-family: 'Avenir Next', system-ui, sans-serif;
+      font-size: 13.5px;
+    }
+
+    .sheet-row .k {
+      color: var(--ink-soft);
+    }
+
+    .sheet-row .v {
+      font-weight: 600;
+      text-align: right;
+    }
+
+    .sheet-close {
+      margin-top: 18px;
+      width: 100%;
+      padding: 13px;
       border: none;
-      border-radius: 5px;
+      border-radius: 12px;
+      background: var(--ink);
+      color: #fff;
+      font-family: 'Avenir Next', system-ui, sans-serif;
+      font-size: 14px;
+      font-weight: 600;
       cursor: pointer;
     }
 
-    #downloadBtn:hover {
-      background: #21568f;
+    .actions {
+      max-width: 720px;
+      margin: 26px auto 0;
+      padding: 0 20px;
+      display: flex;
+      gap: 10px;
+      font-family: 'Avenir Next', system-ui, sans-serif;
+    }
+
+    .actions button {
+      flex: 1;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .actions button.primary {
+      background: var(--ink);
+      color: #fff;
+      border-color: var(--ink);
+    }
+
+    @media (min-width: 600px) {
+      h1 {
+        font-size: 30px;
+      }
     }
   </style>
 </head>
 
 <body>
 
-  <div id="capture">
-    <h1>Lahoza, OLEKSANDR (3 Galtymore)</h1>
-    <p class="subtitle">Weekly Class Timetable</p>
-    <table>
-      <tr>
-        <th class="time-col"></th>
-        <th>Monday</th>
-        <th>Tuesday</th>
-        <th>Wednesday</th>
-        <th>Thursday</th>
-        <th>Friday</th>
-      </tr>
+  <header>
+    <div class="eyebrow utility">Third Year · Galtymore</div>
+    <h1>Oleksandr Lahoza</h1>
+    <div class="student-meta">Live timetable — tap a class for details, updates automatically</div>
+  </header>
 
-      <tr>
-        <td class="time-col">08:30-08:45</td>
-        <td class="empty"></td>
-        <td class="empty"></td>
-        <td class="empty"></td>
-        <td class="empty"></td>
-        <td class="empty"></td>
-      </tr>
-
-      <tr>
-        <td class="time-col">08:46-08:50</td>
-        <td class="cell c-pink"><span class="subj">Tutorial</span><br>B11<br>Heather Gaffney<br>3Tut-E</td>
-        <td class="cell c-pink"><span class="subj">Tutorial</span><br>B11<br>Heather Gaffney<br>3Tut-E</td>
-        <td class="cell c-pink"><span class="subj">Tutorial</span><br>B11<br>Heather Gaffney<br>3Tut-E</td>
-        <td class="cell c-pink"><span class="subj">Tutorial</span><br>B11<br>Heather Gaffney<br>3Tut-E</td>
-        <td class="cell c-pink"><span class="subj">Tutorial</span><br>B11<br>Heather Gaffney<br>3Tut-E</td>
-      </tr>
-
-      <tr>
-        <td class="time-col">08:50-09:50</td>
-        <td class="cell c-yellow"><span class="subj">Wood Technology</span><br>A010B<br>Eoin Harte<br>3Woo-12.4</td>
-        <td class="cell c-blue"><span class="subj">Subject Support</span><br>B02 CHROMEBOOK ROOM 1<br>Helen Dunleavy<br>3Sup-7.4
-        </td>
-        <td class="cell c-yellow"><span class="subj">English</span><br>B18<br>Roseanna Nolan<br>3Eng-E</td>
-        <td class="cell c-pink"><span class="subj">Science (JC - Revised Syllabus)</span><br>B20<br>Heather Gaffney<br>3Sci-E
-        </td>
-        <td class="cell c-yellow"><span class="subj">Wood Technology</span><br>A010B<br>Eoin Harte<br>3Woo-12.4</td>
-      </tr>
-
-      <tr>
-        <td class="time-col">09:50-10:50</td>
-        <td class="cell c-blue"><span class="subj">Subject Support</span><br>B02 CHROMEBOOK ROOM 1<br>Laura Byrne<br>3Sup-7.4
-        </td>
-        <td class="cell c-yellow"><span class="subj">Spanish</span><br>B12<br>Niamh Condron<br>3Spa-10.4</td>
-        <td class="cell c-purple"><span class="subj">History</span><br>C02<br>Michael Byrnes, Joseph O'Brien<br>3His-E
-        </td>
-        <td class="cell c-pink"><span class="subj">Engineering</span><br>A09<br>Adrian Harrison<br>3Engr-11.4</td>
-        <td class="cell c-yellow"><span class="subj">Science (JC - Revised Syllabus)</span><br>B20<br>Heather Gaffney<br>3Sci-E
-        </td>
-      </tr>
-
-      <tr class="break-row">
-        <td class="time-col">10:50-11:05</td>
-        <td colspan="5"></td>
-      </tr>
-
-      <tr>
-        <td class="time-col">11:05-12:05</td>
-        <td class="cell c-purple"><span class="subj">History</span><br>C02<br>Michael Byrnes<br>3His-E</td>
-        <td class="cell c-pink">
-          <span class="subj">Physical Education (JC - Revised Syllabus)</span><br>GymD<br>Eva Cullinan<br>3Pe-E</td>
-        <td class="cell c-blue"><span class="subj">Subject Support</span><br>B08<br>Helen Dunleavy<br>3Sup-7.4</td>
-        <td class="cell c-yellow"><span class="subj">Wood Technology</span><br>A010B<br>Eoin Harte<br>3Woo-12.4</td>
-        <td class="cell c-yellow"><span class="subj">English</span><br>B18<br>Roseanna Nolan<br>3Eng-E</td>
-      </tr>
-
-      <tr>
-        <td class="time-col">12:05-13:05</td>
-        <td class="cell c-blue"><span class="subj">Mathematics</span><br>A06<br>Conor Brennan, Edward Jones<br>3Mat-6.3
-        </td>
-        <td class="cell c-blue"><span class="subj">Mathematics</span><br>A06<br>Conor Brennan, Edward Jones<br>3Mat-6.3
-        </td>
-        <td class="cell c-pink"><span class="subj">Geography</span><br>B18<br>Stephanie Egan, Michelle Holmes<br>3Geo-E
-        </td>
-        <td class="cell c-yellow"><span class="subj">English</span><br>B18<br>Roseanna Nolan<br>3Eng-E</td>
-        <td class="cell c-pink"><span class="subj">Engineering</span><br>A09<br>Aine O'Connor, Adrian Harrison<br>3Engr-11.4
-        </td>
-      </tr>
-
-      <tr class="break-row">
-        <td class="time-col">13:10-13:25</td>
-        <td colspan="5"></td>
-      </tr>
-      <tr class="break-row">
-        <td class="time-col">13:25-13:40</td>
-        <td colspan="5"></td>
-      </tr>
-
-      <tr>
-        <td class="time-col">13:40-14:40</td>
-        <td class="cell c-yellow"><span class="subj">Spanish</span><br>B18<br>Darina Cronin, Niamh Condron<br>3Spa-10.4
-        </td>
-        <td class="cell c-yellow">
-          <span class="subj">Science (JC - Revised Syllabus)</span><br>B20<br>Heather Gaffney, Margaret McNerney<br>3Sci-E
-        </td>
-        <td class="cell c-blue">
-          <span class="subj">Social, Personal and Health Education (SPHE)</span><br>B02 CHROMEBOOK ROOM 1<br>Aoife Stafford<br>3Sphe-E
-        </td>
-        <td class="cell c-blue"><span class="subj">Mathematics</span><br>A06<br>Conor Brennan, Edward Jones<br>3Mat-6.3
-        </td>
-        <td class="empty"></td>
-      </tr>
-
-      <tr>
-        <td class="time-col">14:40-15:40</td>
-        <td class="cell c-pink"><span class="subj">Engineering</span><br>A09<br>Aine O'Connor, Adrian Harrison<br>3Engr-11.4
-        </td>
-        <td class="cell c-pink"><span class="subj">Geography</span><br>B18<br>Stephanie Egan, Michelle Holmes<br>3Geo-E
-        </td>
-        <td class="cell c-pink">
-          <span class="subj">Physical Education (JC - Revised Syllabus)</span><br>GymD<br>Eva Cullinan<br>3Pe-E</td>
-        <td class="cell c-blue">
-          <span class="subj">Civic,Social &amp; Political Educ. (CSPE)</span><br>B11<br>Maria Keeley<br>3Cspe-E</td>
-        <td class="empty"></td>
-      </tr>
-
-      <tr>
-        <td class="time-col">15:40-15:45</td>
-        <td class="empty"></td>
-        <td class="empty"></td>
-        <td class="empty"></td>
-        <td class="empty"></td>
-        <td class="empty"></td>
-      </tr>
-
-    </table>
+  <div class="now-card">
+    <div class="now-inner" id="nowInner">
+      <div>
+        <div class="now-label" id="nowLabel">Right now</div>
+        <div class="now-subject" id="nowSubject">—</div>
+        <div class="now-detail" id="nowDetail">—</div>
+      </div>
+      <div class="now-timer">
+        <div class="t-num" id="nowTimerNum">--</div>
+        <div class="t-label" id="nowTimerLabel">minutes left</div>
+      </div>
+      <div class="now-progress" id="nowProgress"></div>
+    </div>
   </div>
 
-  <button id="downloadBtn">Download as Image</button>
+  <div class="day-tabs utility" id="dayTabs"></div>
+
+  <div class="search-row">
+    <input type="text" id="searchInput" placeholder="Search a subject, teacher or room…">
+  </div>
+
+  <div class="schedule" id="schedule"></div>
+
+  <div class="actions">
+    <button id="jumpTodayBtn">Jump to today</button>
+    <button class="primary" id="downloadBtn">Save as image</button>
+  </div>
+
+  <div class="sheet-overlay" id="overlay"></div>
+  <div class="sheet" id="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-eyebrow utility" id="sheetTime">08:30–08:45</div>
+    <div class="sheet-subject" id="sheetSubject">Subject</div>
+    <div class="sheet-row"><span class="k">Room</span><span class="v" id="sheetRoom">—</span></div>
+    <div class="sheet-row"><span class="k">Teacher</span><span class="v" id="sheetTeacher">—</span></div>
+    <div class="sheet-row"><span class="k">Class code</span><span class="v" id="sheetCode">—</span></div>
+    <button class="sheet-close" id="sheetClose">Close</button>
+  </div>
 
   <script>
-    document.getElementById('downloadBtn').addEventListener('click', function() {
-    const target = document.getElementById('capture');
-    html2canvas(target, { scale: 3, backgroundColor: '#ffffff' }).then(function(canvas) {
-      const link = document.createElement('a');
-      link.download = 'timetable.png';
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    });
+    const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday"];
+
+const L = (start,end,subject,room,teacher,code,cat) => ({start,end,subject,room,teacher,code,cat});
+const BREAK = (start,end,label) => ({start,end,label,isBreak:true});
+
+const timetable = {
+  Monday: [
+    BREAK("08:30","08:45","Arrival"),
+    L("08:46","08:50","Tutorial","B11","Heather Gaffney","3Tut-E","pink"),
+    L("08:50","09:50","Wood Technology","A010B","Eoin Harte","3Woo-12.4","yellow"),
+    L("09:50","10:50","Subject Support","B02 Chromebook Room 1","Laura Byrne","3Sup-7.4","blue"),
+    BREAK("10:50","11:05","Break"),
+    L("11:05","12:05","History","C02","Michael Byrnes","3His-E","purple"),
+    L("12:05","13:05","Mathematics","A06","Conor Brennan, Edward Jones","3Mat-6.3","blue"),
+    BREAK("13:10","13:25","Lunch"),
+    BREAK("13:25","13:40","Lunch"),
+    L("13:40","14:40","Spanish","B18","Darina Cronin, Niamh Condron","3Spa-10.4","yellow"),
+    L("14:40","15:40","Engineering","A09","Aine O'Connor, Adrian Harrison","3Engr-11.4","pink"),
+  ],
+  Tuesday: [
+    BREAK("08:30","08:45","Arrival"),
+    L("08:46","08:50","Tutorial","B11","Heather Gaffney","3Tut-E","pink"),
+    L("08:50","09:50","Subject Support","B02 Chromebook Room 1","Helen Dunleavy","3Sup-7.4","blue"),
+    L("09:50","10:50","Spanish","B12","Niamh Condron","3Spa-10.4","yellow"),
+    BREAK("10:50","11:05","Break"),
+    L("11:05","12:05","Physical Education (JC – Revised Syllabus)","GymD","Eva Cullinan","3Pe-E","pink"),
+    L("12:05","13:05","Mathematics","A06","Conor Brennan, Edward Jones","3Mat-6.3","blue"),
+    BREAK("13:10","13:25","Lunch"),
+    BREAK("13:25","13:40","Lunch"),
+    L("13:40","14:40","Science (JC – Revised Syllabus)","B20","Heather Gaffney, Margaret McNerney","3Sci-E","yellow"),
+    L("14:40","15:40","Geography","B18","Stephanie Egan, Michelle Holmes","3Geo-E","pink"),
+  ],
+  Wednesday: [
+    BREAK("08:30","08:45","Arrival"),
+    L("08:46","08:50","Tutorial","B11","Heather Gaffney","3Tut-E","pink"),
+    L("08:50","09:50","English","B18","Roseanna Nolan","3Eng-E","yellow"),
+    L("09:50","10:50","History","C02","Michael Byrnes, Joseph O'Brien","3His-E","purple"),
+    BREAK("10:50","11:05","Break"),
+    L("11:05","12:05","Subject Support","B08","Helen Dunleavy","3Sup-7.4","blue"),
+    L("12:05","13:05","Geography","B18","Stephanie Egan, Michelle Holmes","3Geo-E","pink"),
+    BREAK("13:10","13:25","Lunch"),
+    BREAK("13:25","13:40","Lunch"),
+    L("13:40","14:40","Social, Personal and Health Education (SPHE)","B02 Chromebook Room 1","Aoife Stafford","3Sphe-E","blue"),
+    L("14:40","15:40","Physical Education (JC – Revised Syllabus)","GymD","Eva Cullinan","3Pe-E","pink"),
+  ],
+  Thursday: [
+    BREAK("08:30","08:45","Arrival"),
+    L("08:46","08:50","Tutorial","B11","Heather Gaffney","3Tut-E","pink"),
+    L("08:50","09:50","Science (JC – Revised Syllabus)","B20","Heather Gaffney","3Sci-E","pink"),
+    L("09:50","10:50","Engineering","A09","Adrian Harrison","3Engr-11.4","pink"),
+    BREAK("10:50","11:05","Break"),
+    L("11:05","12:05","Wood Technology","A010B","Eoin Harte","3Woo-12.4","yellow"),
+    L("12:05","13:05","English","B18","Roseanna Nolan","3Eng-E","yellow"),
+    BREAK("13:10","13:25","Lunch"),
+    BREAK("13:25","13:40","Lunch"),
+    L("13:40","14:40","Mathematics","A06","Conor Brennan, Edward Jones","3Mat-6.3","blue"),
+    L("14:40","15:40","Civic, Social & Political Educ. (CSPE)","B11","Maria Keeley","3Cspe-E","blue"),
+  ],
+  Friday: [
+    BREAK("08:30","08:45","Arrival"),
+    L("08:46","08:50","Tutorial","B11","Heather Gaffney","3Tut-E","pink"),
+    L("08:50","09:50","Wood Technology","A010B","Eoin Harte","3Woo-12.4","yellow"),
+    L("09:50","10:50","Science (JC – Revised Syllabus)","B20","Heather Gaffney","3Sci-E","yellow"),
+    BREAK("10:50","11:05","Break"),
+    L("11:05","12:05","English","B18","Roseanna Nolan","3Eng-E","yellow"),
+    L("12:05","13:05","Engineering","A09","Aine O'Connor, Adrian Harrison","3Engr-11.4","pink"),
+  ],
+};
+
+const dow = new Date().getDay();
+const todayName = DAYS[dow-1] || null;
+let selectedDay = todayName || "Monday";
+
+function toMinutes(hhmm){
+  const [h,m] = hhmm.split(":").map(Number);
+  return h*60+m;
+}
+function nowMinutes(){
+  const d = new Date();
+  return d.getHours()*60 + d.getMinutes();
+}
+function fmtMinLeft(mins){
+  if (mins < 60) return {num: mins, label: mins===1 ? "minute left" : "minutes left"};
+  const h = Math.floor(mins/60), m = mins%60;
+  return {num: h + "h" + (m? " "+m+"m":""), label: "left"};
+}
+
+const dayTabsEl = document.getElementById('dayTabs');
+DAYS.forEach(day=>{
+  const btn = document.createElement('div');
+  btn.className = 'day-tab' + (day===selectedDay ? ' active':'') + (day===todayName ? ' is-today':'');
+  btn.innerHTML = day.slice(0,3) + (day===todayName ? '<span class="dtn">Today</span>':'');
+  btn.addEventListener('click', ()=>{ selectedDay = day; renderAll(); });
+  dayTabsEl.appendChild(btn);
+});
+
+const scheduleEl = document.getElementById('schedule');
+const searchInput = document.getElementById('searchInput');
+
+function matchesSearch(item, q){
+  if (!q) return true;
+  const hay = [item.subject, item.room, item.teacher, item.code].join(' ').toLowerCase();
+  return hay.includes(q);
+}
+
+function renderSchedule(){
+  const q = searchInput.value.trim().toLowerCase();
+  const items = timetable[selectedDay];
+  scheduleEl.innerHTML = '';
+
+  if (!items.length){
+    scheduleEl.innerHTML = '<div class="empty-day">No classes scheduled.</div>';
+    return;
+  }
+
+  const isToday = selectedDay === todayName;
+  const nm = nowMinutes();
+
+  let anyVisible = false;
+  items.forEach((item)=>{
+    if (item.isBreak){
+      if (q) return;
+      const row = document.createElement('div');
+      row.className = 'break-slot';
+      row.innerHTML = `<div class="slot-time">${item.start}</div><div>${item.label}</div>`;
+      scheduleEl.appendChild(row);
+      return;
+    }
+    if (!matchesSearch(item, q)) return;
+    anyVisible = true;
+
+    const s = toMinutes(item.start), e = toMinutes(item.end);
+    const isNow = isToday && nm >= s && nm < e && !q;
+    const isPast = isToday && nm >= e;
+
+    const row = document.createElement('div');
+    row.className = 'slot cat-' + item.cat + (isNow ? ' now-slot':'') + (isPast && !q ? ' dimmed':'');
+    row.innerHTML = `
+      <div class="slot-time utility">${item.start}<br>${item.end}</div>
+      <div class="slot-bar"></div>
+      <div class="slot-body">
+        ${isNow ? '<span class="now-pill">NOW</span><br>' : ''}
+        <div class="slot-subject">${item.subject}</div>
+        <div class="slot-meta">${item.room} · ${item.teacher}</div>
+      </div>
+    `;
+    row.addEventListener('click', ()=> openSheet(item));
+    scheduleEl.appendChild(row);
   });
+
+  if (q && !anyVisible){
+    scheduleEl.innerHTML = '<div class="empty-day">No matches for “' + searchInput.value + '”.</div>';
+  }
+}
+
+function findCurrentAndNext(){
+  if (!todayName) return {current:null, next:null};
+  const items = timetable[todayName];
+  const nm = nowMinutes();
+  let current = null, next = null;
+  for (const item of items){
+    const s = toMinutes(item.start), e = toMinutes(item.end);
+    if (nm >= s && nm < e){ current = item; }
+    if (nm < s && !next){ next = item; }
+  }
+  return {current, next};
+}
+
+function renderNowCard(){
+  const label = document.getElementById('nowLabel');
+  const subject = document.getElementById('nowSubject');
+  const detail = document.getElementById('nowDetail');
+  const timerNum = document.getElementById('nowTimerNum');
+  const timerLabel = document.getElementById('nowTimerLabel');
+  const progress = document.getElementById('nowProgress');
+
+  if (!todayName){
+    label.textContent = "It's the weekend";
+    subject.textContent = "No school today";
+    detail.textContent = "Back on Monday";
+    timerNum.textContent = "—";
+    timerLabel.textContent = "";
+    progress.style.width = '0%';
+    return;
+  }
+
+  const { current, next } = findCurrentAndNext();
+  const nm = nowMinutes();
+
+  if (current){
+    const s = toMinutes(current.start), e = toMinutes(current.end);
+    const left = e - nm;
+    const total = e - s;
+    label.textContent = 'In progress';
+    subject.textContent = current.subject;
+    detail.textContent = current.room + ' · ' + current.teacher;
+    const f = fmtMinLeft(left);
+    timerNum.textContent = f.num;
+    timerLabel.textContent = f.label;
+    progress.style.width = Math.min(100, Math.max(0, ((nm-s)/total)*100)) + '%';
+  } else if (next){
+    const s = toMinutes(next.start);
+    const until = s - nm;
+    label.textContent = 'Up next';
+    subject.textContent = next.subject;
+    detail.textContent = next.room + ' · ' + next.teacher + ' · starts ' + next.start;
+    const f = fmtMinLeft(until);
+    timerNum.textContent = f.num;
+    timerLabel.textContent = f.label==='left' ? 'until start' : 'until start';
+    progress.style.width = '0%';
+  } else {
+    label.textContent = 'Done for today';
+    subject.textContent = 'School day finished';
+    detail.textContent = 'See you tomorrow';
+    timerNum.textContent = '🎉';
+    timerLabel.textContent = '';
+    progress.style.width = '100%';
+  }
+}
+
+const overlay = document.getElementById('overlay');
+const sheet = document.getElementById('sheet');
+function openSheet(item){
+  document.getElementById('sheetTime').textContent = item.start + ' – ' + item.end + ' · ' + selectedDay;
+  document.getElementById('sheetSubject').textContent = item.subject;
+  document.getElementById('sheetRoom').textContent = item.room;
+  document.getElementById('sheetTeacher').textContent = item.teacher;
+  document.getElementById('sheetCode').textContent = item.code;
+  overlay.classList.add('open');
+  sheet.classList.add('open');
+}
+function closeSheet(){
+  overlay.classList.remove('open');
+  sheet.classList.remove('open');
+}
+overlay.addEventListener('click', closeSheet);
+document.getElementById('sheetClose').addEventListener('click', closeSheet);
+
+document.getElementById('jumpTodayBtn').addEventListener('click', ()=>{
+  if (todayName){ selectedDay = todayName; renderAll(); }
+});
+document.getElementById('downloadBtn').addEventListener('click', ()=>{
+  html2canvas(document.body, { scale: 2, backgroundColor: '#f6f4ef' }).then(canvas=>{
+    const link = document.createElement('a');
+    link.download = 'timetable.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+});
+searchInput.addEventListener('input', renderSchedule);
+
+function renderAll(){
+  document.querySelectorAll('.day-tab').forEach((el,i)=>{
+    el.classList.toggle('active', DAYS[i]===selectedDay);
+  });
+  renderSchedule();
+  renderNowCard();
+}
+
+renderAll();
+setInterval(()=>{ renderNowCard(); renderSchedule(); }, 30000);
   </script>
 
 </body>
