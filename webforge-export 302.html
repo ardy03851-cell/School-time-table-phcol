@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <!-- Optimized for iPads: prevents zooming and scrolling -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>iPad Indie Voxel Game</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: #87CEEB;
+      /* Sky blue */
+      touch-action: none;
+      /* Crucial for iOS */
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    #game-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* Modern UI Overlay */
+    #ui-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+    }
+
+    .btn {
+      pointer-events: auto;
+      position: absolute;
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 2px solid rgba(255, 255, 255, 0.5);
+      border-radius: 16px;
+      padding: 15px 25px;
+      font-weight: 800;
+      font-size: 16px;
+      color: white;
+      text-transform: uppercase;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      touch-action: manipulation;
+      transition: background 0.1s;
+    }
+
+    .btn:active {
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    #btn-jump {
+      bottom: 40px;
+      right: 40px;
+      border-radius: 50%;
+      width: 80px;
+      height: 80px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #btn-action {
+      bottom: 140px;
+      right: 40px;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 100, 100, 0.4);
+    }
+
+    #btn-mode {
+      top: 40px;
+      right: 40px;
+    }
+
+    /* Crosshair */
+    #crosshair {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 24px;
+      height: 24px;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      opacity: 0.8;
+    }
+
+    #crosshair::before,
+    #crosshair::after {
+      content: '';
+      position: absolute;
+      background: white;
+      box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+    }
+
+    #crosshair::before {
+      top: 11px;
+      left: 0;
+      width: 24px;
+      height: 2px;
+    }
+
+    #crosshair::after {
+      top: 0;
+      left: 11px;
+      width: 2px;
+      height: 24px;
+    }
+
+    /* Virtual Joystick for Movement */
+    #joystick-zone {
+      position: absolute;
+      bottom: 40px;
+      left: 40px;
+      width: 140px;
+      height: 140px;
+      background: rgba(255, 255, 255, 0.15);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      pointer-events: auto;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+
+    #joystick-knob {
+      position: absolute;
+      top: 40px;
+      left: 40px;
+      width: 60px;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 50%;
+      pointer-events: none;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Loading Screen */
+    #loading {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #87CEEB;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      color: white;
+      font-size: 24px;
+      font-weight: bold;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .spinner {
+      margin-top: 20px;
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s infinite linear;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+
+  <!-- Import Three.js via ES Modules -->
+  <script type="importmap">
+    {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+
+<body>
+
+  <div id="game-container"></div>
+
+  <div id="ui-layer">
+    <div id="crosshair"></div>
+    <div id="joystick-zone">
+      <div id="joystick-knob"></div>
+    </div>
+
+    <button id="btn-jump" class="btn">JUMP</button>
+    <button id="btn-action" class="btn">MINE</button>
+    <button id="btn-mode" class="btn">MODE: MINE</button>
+  </div>
+
+  <div id="loading">
+    <div>Loading World & Models...</div>
+    <div class="spinner"></div>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        // --- GAME SETTINGS ---
+        const WORLD_SIZE = 16;
+        const GRAVITY = 25;
+        const MOVEMENT_SPEED = 6;
+        const JUMP_FORCE = 8;
+        
+        // --- GLOBALS ---
+        let scene, camera, renderer;
+        let blockTemplate = null;
+        const blocks = new Map(); // Store blocks by "x,y,z"
+        const blockGroup = new THREE.Group();
+        
+        // Player Physics State
+        const player = {
+            x: 0, y: 5, z: 0,
+            vx: 0, vy: 0, vz: 0,
+            yaw: 0, pitch: 0,
+            radius: 0.3, height: 1.5,
+            onGround: false
+        };
+
+        // Input State
+        let moveVector = { x: 0, y: 0 };
+        let buildMode = false; // false = Mine, true = Build
+        
+        init();
+
+        function init() {
+            // 1. Setup Scene & Camera
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87CEEB);
+            scene.fog = new THREE.Fog(0x87CEEB, 10, 30);
+            scene.add(blockGroup);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.rotation.order = 'YXZ'; // Important for FPS camera
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.getElementById('game-container').appendChild(renderer.domElement);
+
+            // 2. Setup Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(20, 40, 20);
+            dirLight.castShadow = true;
+            dirLight.shadow.mapSize.width = 1024;
+            dirLight.shadow.mapSize.height = 1024;
+            dirLight.shadow.camera.near = 0.5;
+            dirLight.shadow.camera.far = 100;
+            dirLight.shadow.camera.left = -20;
+            dirLight.shadow.camera.right = 20;
+            dirLight.shadow.camera.top = 20;
+            dirLight.shadow.camera.bottom = -20;
+            scene.add(dirLight);
+
+            // 3. Load GLTF Model
+            const loader = new GLTFLoader();
+            loader.load('grass_block.gltf', (gltf) => {
+                blockTemplate = gltf.scene;
+                
+                // Auto-scale model to exactly 1x1x1 to fit our voxel grid
+                const box = new THREE.Box3().setFromObject(blockTemplate);
+                const size = new THREE.Vector3();
+                box.getSize(size);
+                const maxDim = Math.max(size.x, size.y, size.z);
+                blockTemplate.scale.setScalar(1 / maxDim);
+                
+                // Enable shadows for the model
+                blockTemplate.traverse((child) => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                    }
+                });
+
+                generateWorld();
+                document.getElementById('loading').style.display = 'none';
+                lastTime = performance.now();
+                animate();
+            }, undefined, (error) => {
+                console.error("Couldn't load grass_block.gltf! Using fallback box.", error);
+                // Fallback if model is missing
+                const geo = new THREE.BoxGeometry(1, 1, 1);
+                const mat = new THREE.MeshLambertMaterial({ color: 0x44aa44 });
+                blockTemplate = new THREE.Mesh(geo, mat);
+                blockTemplate.castShadow = true;
+                blockTemplate.receiveShadow = true;
+                
+                generateWorld();
+                document.getElementById('loading').style.display = 'none';
+                lastTime = performance.now();
+                animate();
+            });
+
+            setupControls();
+            
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function generateWorld() {
+            for (let x = -WORLD_SIZE/2; x < WORLD_SIZE/2; x++) {
+                for (let z = -WORLD_SIZE/2; z < WORLD_SIZE/2; z++) {
+                    // Slight hills using sine waves
+                    const y = Math.floor(Math.sin(x * 0.3) * 2 + Math.cos(z * 0.3) * 2);
+                    addBlock(x, y, z);
+                    // Add some depth
+                    addBlock(x, y-1, z);
+                    addBlock(x, y-2, z);
+                }
+            }
+        }
+
+        function addBlock(x, y, z) {
+            const key = `${x},${y},${z}`;
+            if (blocks.has(key)) return;
+
+            const block = blockTemplate.clone();
+            block.position.set(x, y, z);
+            
+            // Tag all meshes so raycaster can find the root block data
+            block.traverse(child => {
+                if (child.isMesh) {
+                    child.userData = { isBlock: true, key: key, root: block };
+                }
+            });
+
+            blockGroup.add(block);
+            blocks.set(key, block);
+        }
+
+        function removeBlock(key) {
+            if (blocks.has(key)) {
+                const block = blocks.get(key);
+                blockGroup.remove(block);
+                blocks.delete(key);
+            }
+        }
+
+        // --- TOUCH CONTROLS (iPad Optimized) ---
+        function setupControls() {
+            // Virtual Joystick (Left)
+            const zone = document.getElementById('joystick-zone');
+            const knob = document.getElementById('joystick-knob');
+            let joyTouchId = null;
+            const maxRadius = 40;
+
+            zone.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const touch = e.changedTouches[0];
+                joyTouchId = touch.identifier;
+                updateJoystick(touch);
+            });
+
+            zone.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === joyTouchId) {
+                        updateJoystick(e.changedTouches[i]);
+                    }
+                }
+            });
+
+            const resetJoystick = (e) => {
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === joyTouchId) {
+                        joyTouchId = null;
+                        knob.style.transform = `translate(0px, 0px)`;
+                        moveVector = { x: 0, y: 0 };
+                    }
+                }
+            };
+            zone.addEventListener('touchend', resetJoystick);
+            zone.addEventListener('touchcancel', resetJoystick);
+
+            function updateJoystick(touch) {
+                const rect = zone.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                let dx = touch.clientX - centerX;
+                let dy = touch.clientY - centerY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance > maxRadius) {
+                    dx = (dx / distance) * maxRadius;
+                    dy = (dy / distance) * maxRadius;
+                }
+                
+                knob.style.transform = `translate(${dx}px, ${dy}px)`;
+                
+                // Normalize for movement speed (-1 to 1)
+                moveVector.x = dx / maxRadius;
+                moveVector.y = dy / maxRadius;
+            }
+
+            // Look Around (Right half of screen)
+            let lookTouchId = null;
+            let lastLookX = 0;
+            let lastLookY = 0;
+            const lookSensitivity = 0.005;
+
+            window.addEventListener('touchstart', (e) => {
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    const touch = e.changedTouches[i];
+                    // If touch is on right half and NOT on a UI button
+                    if (touch.clientX > window.innerWidth / 2 && !touch.target.classList.contains('btn')) {
+                        lookTouchId = touch.identifier;
+                        lastLookX = touch.clientX;
+                        lastLookY = touch.clientY;
+                    }
+                }
+            }, { passive: false });
+
+            window.addEventListener('touchmove', (e) => {
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    const touch = e.changedTouches[i];
+                    if (touch.identifier === lookTouchId) {
+                        const deltaX = touch.clientX - lastLookX;
+                        const deltaY = touch.clientY - lastLookY;
+
+                        player.yaw -= deltaX * lookSensitivity;
+                        player.pitch -= deltaY * lookSensitivity;
+                        
+                        // Clamp pitch so camera doesn't flip
+                        player.pitch = Math.max(-Math.PI/2 + 0.1, Math.min(Math.PI/2 - 0.1, player.pitch));
+
+                        lastLookX = touch.clientX;
+                        lastLookY = touch.clientY;
+                    }
+                }
+            }, { passive: false });
+
+            window.addEventListener('touchend', (e) => {
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === lookTouchId) lookTouchId = null;
+                }
+            });
+
+            // UI Buttons
+            document.getElementById('btn-jump').addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (player.onGround) {
+                    player.vy = JUMP_FORCE;
+                    player.onGround = false;
+                }
+            });
+
+            const btnMode = document.getElementById('btn-mode');
+            const btnAction = document.getElementById('btn-action');
+            
+            btnMode.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                buildMode = !buildMode;
+                if (buildMode) {
+                    btnMode.innerText = "MODE: BUILD";
+                    btnAction.innerText = "PLACE";
+                    btnAction.style.background = "rgba(100, 255, 100, 0.4)";
+                } else {
+                    btnMode.innerText = "MODE: MINE";
+                    btnAction.innerText = "MINE";
+                    btnAction.style.background = "rgba(255, 100, 100, 0.4)";
+                }
+            });
+
+            btnAction.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                performAction();
+            });
+        }
+
+        // --- RAYCASTING (Mine / Place) ---
+        function performAction() {
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(new THREE.Vector2(0, 0), camera); // Center of screen
+            
+            // Intersect all meshes in the block group
+            const intersects = raycaster.intersectObjects(blockGroup.children, true);
+            
+            if (intersects.length > 0) {
+                // Find the first valid block hit
+                let hit = null;
+                for (let i = 0; i < intersects.length; i++) {
+                    if (intersects[i].object.userData.isBlock && intersects[i].distance < 6) {
+                        hit = intersects[i];
+                        break;
+                    }
+                }
+
+                if (!hit) return;
+
+                const blockKey = hit.object.userData.key;
+                
+                if (!buildMode) {
+                    // MINE
+                    removeBlock(blockKey);
+                } else {
+                    // BUILD
+                    const normal = hit.face.normal;
+                    // Get position of the block that was hit
+                    const rootBlock = hit.object.userData.root;
+                    const pos = rootBlock.position;
+                    
+                    const newX = Math.round(pos.x + normal.x);
+                    const newY = Math.round(pos.y + normal.y);
+                    const newZ = Math.round(pos.z + normal.z);
+                    
+                    // Prevent placing a block exactly where the player is standing
+                    const px = Math.floor(player.x);
+                    const py = Math.floor(player.y);
+                    const pz = Math.floor(player.z);
+                    const pHeadY = Math.floor(player.y + player.height * 0.8);
+
+                    const isIntersectingPlayer = (newX === px && newZ === pz) && (newY === py || newY === pHeadY);
+                    
+                    if (!isIntersectingPlayer) {
+                        addBlock(newX, newY, newZ);
+                    }
+                }
+            }
+        }
+
+        // --- PHYSICS & COLLISION ---
+        function checkCollision(x, y, z) {
+            // Check bounding box corners against block grid
+            const radius = player.radius;
+            const height = player.height;
+            
+            const offsets = [
+                { dx: -radius, dy: 0, dz: -radius },
+                { dx: radius, dy: 0, dz: -radius },
+                { dx: -radius, dy: 0, dz: radius },
+                { dx: radius, dy: 0, dz: radius },
+                { dx: -radius, dy: height, dz: -radius },
+                { dx: radius, dy: height, dz: -radius },
+                { dx: -radius, dy: height, dz: radius },
+                { dx: radius, dy: height, dz: radius }
+            ];
+
+            for (let i = 0; i < offsets.length; i++) {
+                const checkX = Math.round(x + offsets[i].dx);
+                const checkY = Math.round(y + offsets[i].dy);
+                const checkZ = Math.round(z + offsets[i].dz);
+                
+                if (blocks.has(`${checkX},${checkY},${checkZ}`)) return true;
+            }
+            return false;
+        }
+
+        let lastTime = 0;
+        let walkTime = 0;
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const time = performance.now();
+            const dt = Math.min((time - lastTime) / 1000, 0.1); // Cap delta time
+            lastTime = time;
+
+            // Update Velocity from Joystick
+            // Note: moveVector.y maps to Forward/Backward (Z axis), x maps to Strafe (X axis)
+            const speed = MOVEMENT_SPEED;
+            const forward = -moveVector.y * speed;
+            const right = moveVector.x * speed;
+
+            // Calculate movement relative to camera yaw
+            player.vx = forward * Math.sin(player.yaw) + right * Math.cos(player.yaw);
+            player.vz = forward * Math.cos(player.yaw) - right * Math.sin(player.yaw);
+
+            // Apply Gravity
+            player.vy -= GRAVITY * dt;
+
+            // X Collision
+            player.x += player.vx * dt;
+            if (checkCollision(player.x, player.y, player.z)) {
+                player.x -= player.vx * dt;
+            }
+
+            // Z Collision
+            player.z += player.vz * dt;
+            if (checkCollision(player.x, player.y, player.z)) {
+                player.z -= player.vz * dt;
+            }
+
+            // Y Collision
+            player.y += player.vy * dt;
+            player.onGround = false;
+            
+            if (checkCollision(player.x, player.y, player.z)) {
+                if (player.vy < 0) player.onGround = true; // Landed
+                player.y -= player.vy * dt;
+                player.vy = 0;
+            }
+            
+            // Kill floor
+            if (player.y < -20) {
+                player.x = 0; player.y = 10; player.z = 0; player.vy = 0;
+            }
+
+            // Update Camera Position & Rotation
+            // Add subtle head bobbing when moving
+            let bobbing = 0;
+            if (player.onGround && (Math.abs(player.vx) > 0.1 || Math.abs(player.vz) > 0.1)) {
+                walkTime += dt * 10;
+                bobbing = Math.sin(walkTime) * 0.08;
+            } else {
+                walkTime = 0;
+            }
+
+            camera.position.set(player.x, player.y + player.height + bobbing, player.z);
+            
+            // Set rotation using Euler (YXZ order)
+            camera.rotation.set(player.pitch, player.yaw, 0);
+
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+  </script>
+</body>
+
+</html>
